@@ -5,7 +5,7 @@ interface ConfigurationHash {
   /**
    * The target URL for the multipart POST request. This can be a string or a function that allows you you to construct and return a value, based on supplied params. (Default: /)
    **/
-  target?: string;
+  target?: string | ((params: string[]) => string);
   /**
    * The size in bytes of each uploaded chunk of data. The last uploaded chunk will be at least this size and up to two the size, see Issue #51 for details and reasons. (Default: 1*1024*1024)
    **/
@@ -97,7 +97,7 @@ interface ConfigurationHash {
   /**
    * Override the function that generates unique identifiers for each file. (Default: null)
    **/
-  generateUniqueIdentifier?: () => string;
+  generateUniqueIdentifier?: (file: any) => string;
   /**
    * Indicates how many files can be uploaded in a single session. Valid values are any positive integer and undefined for no limit. (Default: undefined)
    **/
@@ -138,6 +138,10 @@ interface ConfigurationHash {
    * The number of milliseconds to wait before retrying a chunk on a non-permanent error. Valid values are any positive integer and undefined for immediate retry. (Default: undefined)
    **/
   chunkRetryInterval?: number;
+  /**
+   * A list of HTTP errors that should be interpreted as failed requests
+   */
+  permanentErrors?: number[];
   /**
    * Standard CORS requests do not send or set any cookies by default. In order to include cookies as part of the request, you need to set the withCredentials property to true. (Default: false)
    **/
