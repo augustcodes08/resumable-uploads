@@ -1,6 +1,6 @@
 {
   "name": "resumable-uploads",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A JavaScript library for providing multiple simultaneous, stable, fault-tolerant and resumable/restartable uploads via the HTML5 File API that supports typescript.",
   "main": "resumable-uploads.js",
   "types": "./resumable-uploads.d.ts",

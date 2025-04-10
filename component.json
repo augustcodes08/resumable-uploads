@@ -1,9 +1,7 @@
 {
-    "name": "resumable.ts",
-    "repo": "augustcodses08/resumable.ts",
-    "version": "0.1.0",
-    "main": "resumablets.js",
-    "scripts": [
-        "resumablets.js"
-    ]
+  "name": "resumable.ts",
+  "repo": "augustcodses08/resumable.ts",
+  "version": "0.1.2",
+  "main": "resumable-uploads.js",
+  "scripts": ["resumable-uploads.js"]
 }
