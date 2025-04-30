@@ -4,7 +4,7 @@ A typescript supported version of the resumbalejs repo. The resumable.js repo is
 
 ## Documentation
 
-A full break down of documentation can be found in [DOCUMENTATIION.md](./DOCUMENTATION.md)
+A full break down of documentation can be found in [DOCUMENTATION.md](./DOCUMENTATION.md)
 
 ## Contributing
 
