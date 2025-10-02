@@ -137,7 +137,7 @@ interface ConfigurationHash {
   /**
    * The number of milliseconds to wait before retrying a chunk on a non-permanent error. Valid values are any positive integer and undefined for immediate retry. (Default: undefined)
    **/
-  chunkRetryInterval?: number;
+  chunkRetryInterval?: number | ((retryNumber: number) => number);
   /**
    * A list of HTTP errors that should be interpreted as failed requests
    */

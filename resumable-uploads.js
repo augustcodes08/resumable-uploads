@@ -898,6 +898,9 @@
             $.retries++;
             let retryInterval = $.getOpt("chunkRetryInterval");
             if (retryInterval !== undefined) {
+              if (typeof retryInterval === "function") {
+                retryInterval = retryInterval($.retries);
+              }
               $.pendingRetry = true;
               setTimeout($.send, retryInterval);
             } else {
