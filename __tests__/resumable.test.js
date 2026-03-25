@@ -446,7 +446,7 @@ describe("Resumable", () => {
             expect.objectContaining({
               fileName: "test.txt",
               file: mockFile,
-            }),
+            })
           );
           done();
         } catch (error) {
@@ -470,7 +470,7 @@ describe("Resumable", () => {
             expect.arrayContaining([
               expect.objectContaining({ fileName: "file1.txt" }),
               expect.objectContaining({ fileName: "file2.txt" }),
-            ]),
+            ])
           );
           expect(files.length).toBe(2);
           done();
@@ -583,9 +583,7 @@ describe("Resumable", () => {
       resumable.addFile(mockFile);
 
       const resumableFile = resumable.files[0];
-      const foundFile = resumable.getFromUniqueIdentifier(
-        resumableFile.uniqueIdentifier,
-      );
+      const foundFile = resumable.getFromUniqueIdentifier(resumableFile.uniqueIdentifier);
 
       expect(foundFile).toBe(resumableFile);
     });

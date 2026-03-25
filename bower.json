@@ -1,13 +1,6 @@
 {
-        "name": "resumable.ts",
-        "main": "resumablets.js",
-        "ignore": [
-                ".gitignore",
-                "*.md"
-        ],
-        "keywords": [
-                "HTML5 File API",
-                "Upload",
-                "Large files"
-        ]
+  "name": "resumable.ts",
+  "main": "resumablets.js",
+  "ignore": [".gitignore", "*.md"],
+  "keywords": ["HTML5 File API", "Upload", "Large files"]
 }

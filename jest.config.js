@@ -13,12 +13,7 @@ module.exports = {
   collectCoverage: false, // Enable with --coverage flag
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  collectCoverageFrom: [
-    "resumable-uploads.js",
-    "!node_modules/**",
-    "!coverage/**",
-    "!**/*.d.ts",
-  ],
+  collectCoverageFrom: ["resumable-uploads.js", "!node_modules/**", "!coverage/**", "!**/*.d.ts"],
 
   // Coverage thresholds
   coverageThreshold: {

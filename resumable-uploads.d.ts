@@ -247,10 +247,7 @@ export class Resumable {
   /**
    *  A new file was added. Optionally, you can use the browser event object from when the file was added.
    **/
-  on(
-    event: "fileAdded",
-    callback: (file: ResumableFile, event: DragEvent) => void,
-  ): void;
+  on(event: "fileAdded", callback: (file: ResumableFile, event: DragEvent) => void): void;
   /**
    *  New files were added.
    **/
@@ -262,10 +259,7 @@ export class Resumable {
   /**
    *  An error occurred during upload of a specific file.
    **/
-  on(
-    event: "fileError",
-    callback: (file: ResumableFile, message: string) => void,
-  ): void;
+  on(event: "fileError", callback: (file: ResumableFile, message: string) => void): void;
   /**
    *  Upload has been started on the Resumable object.
    **/
@@ -281,10 +275,7 @@ export class Resumable {
   /**
    *  An error, including fileError, occurred.
    **/
-  on(
-    event: "error",
-    callback: (message: string, file: ResumableFile) => void,
-  ): void;
+  on(event: "error", callback: (message: string, file: ResumableFile) => void): void;
   /**
    *  Uploading was paused.
    **/
@@ -304,10 +295,7 @@ export class Resumable {
   /**
    *  Show progress in file preparation
    **/
-  on(
-    event: "chunkingProgress",
-    callback: (file: ResumableFile, ratio: number) => void,
-  ): void;
+  on(event: "chunkingProgress", callback: (file: ResumableFile, ratio: number) => void): void;
   /**
    *  File is ready for upload
    **/
