@@ -68,7 +68,7 @@
       clearInput: true,
       chunkFormat: "blob",
       setChunkTypeFromFile: false,
-      maxFilesErrorCallback: function (files, errorCount) {
+      maxFilesErrorCallback: function (_files, _errorCount) {
         const maxFiles = $.getOpt("maxFiles");
         alert(
           "Please upload no more than " +
@@ -79,7 +79,7 @@
         );
       },
       minFileSize: 1,
-      minFileSizeErrorCallback: function (file, errorCount) {
+      minFileSizeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
@@ -89,7 +89,7 @@
         );
       },
       maxFileSize: undefined,
-      maxFileSizeErrorCallback: function (file, errorCount) {
+      maxFileSizeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
@@ -99,7 +99,7 @@
         );
       },
       fileType: [],
-      fileTypeErrorCallback: function (file, errorCount) {
+      fileTypeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
@@ -743,7 +743,7 @@
         // Set up request and listen for event
         $.xhrTest = new XMLHttpRequest();
 
-        let testHandler = function (e) {
+        let testHandler = function (_e) {
           $.tested = true;
           let status = $.status();
           if (status == "success") {
@@ -856,7 +856,7 @@
         $.callback("progress");
 
         // Done (either done, failed or retry)
-        let doneHandler = function (e) {
+        let doneHandler = function (_e) {
           const statusCode = $.xhr?.status;
           let status = $.status();
           if (status == "success" || status == "error") {
@@ -957,7 +957,7 @@
             );
           } else if ($.getOpt("chunkFormat") == "base64") {
             let fr = new FileReader();
-            fr.onload = function (e) {
+            fr.onload = function (_e) {
               data.append(parameterNamespace + $.getOpt("fileParameterName"), fr.result);
               $.xhr.send(data);
             };

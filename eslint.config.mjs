@@ -38,6 +38,10 @@ export default [
       "@typescript-eslint/no-this-alias": ["error", {
         allowDestructuring: true,
         allowedNames: ["$", "$opt", "self", "that"]
+      }],
+      "@typescript-eslint/no-unused-vars": ["error", {
+        argsIgnorePattern: "^_",
+        varsIgnorePattern: "^_"
       }]
     }
   },

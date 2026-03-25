@@ -61,7 +61,7 @@ interface ConfigurationHash {
   /**
    * Extra parameters to include in the multipart POST with data. This can be an object or a function. If a function, it will be passed a ResumableFile and a ResumableChunk object (Default: {})
    **/
-  query?: Object;
+  query?: object | ((file: ResumableFile, chunk: ResumableChunk) => object);
   /**
    * Method for chunk test request. (Default: 'GET')
    **/
@@ -77,7 +77,7 @@ interface ConfigurationHash {
   /**
    * Extra headers to include in the multipart POST with data. This can be an object or a function that allows you to construct and return a value, based on supplied file (Default: {})
    **/
-  headers?: Object | ((file: ResumableFile) => Object);
+  headers?: object | ((file: ResumableFile) => object);
   /**
    * Method to use when POSTing chunks to the server (multipart or octet) (Default: multipart)
    **/
@@ -97,7 +97,7 @@ interface ConfigurationHash {
   /**
    * Override the function that generates unique identifiers for each file. (Default: null)
    **/
-  generateUniqueIdentifier?: (file: any) => string;
+  generateUniqueIdentifier?: (file: File, event?: Event) => string | Promise<string>;
   /**
    * Indicates how many files can be uploaded in a single session. Valid values are any positive integer and undefined for no limit. (Default: undefined)
    **/
@@ -223,7 +223,7 @@ export class Resumable {
    * Returns the total size of the upload in bytes.
    **/
   getSize(): number;
-  getOpt(o: string): any;
+  getOpt(o: string): unknown;
 
   // Events
   /**
@@ -307,7 +307,7 @@ export class Resumable {
   /**
    * Listen for event from Resumable.js (see below)
    **/
-  on(event: string, callback: Function): void;
+  on(event: string, callback: (...args: unknown[]) => void): void;
 }
 
 interface ResumableFile {
@@ -370,4 +370,77 @@ interface ResumableFile {
   isComplete: () => boolean;
 }
 
-interface ResumableChunk {}
+interface ResumableChunk {
+  /**
+   * Reference to the parent Resumable object
+   **/
+  resumableObj: Resumable;
+  /**
+   * Reference to the parent ResumableFile object
+   **/
+  fileObj: ResumableFile;
+  /**
+   * Chunk offset index
+   **/
+  offset: number;
+  /**
+   * Whether the chunk has been tested
+   **/
+  tested: boolean;
+  /**
+   * Number of retry attempts
+   **/
+  retries: number;
+  /**
+   * Whether a retry is pending
+   **/
+  pendingRetry: boolean;
+  /**
+   * Number of bytes loaded
+   **/
+  loaded: number;
+  /**
+   * Starting byte position
+   **/
+  startByte: number;
+  /**
+   * Ending byte position
+   **/
+  endByte: number;
+  /**
+   * Preprocessing state: 0 = unprocessed, 1 = processing, 2 = finished
+   **/
+  preprocessState: number;
+  /**
+   * XMLHttpRequest object
+   **/
+  xhr: XMLHttpRequest | null;
+  /**
+   * Test if chunk already exists on server
+   **/
+  test: () => void;
+  /**
+   * Send the chunk to the server
+   **/
+  send: () => void;
+  /**
+   * Abort the chunk upload
+   **/
+  abort: () => void;
+  /**
+   * Get chunk status: 'pending', 'uploading', 'success', 'error'
+   **/
+  status: () => string;
+  /**
+   * Get server response message
+   **/
+  message: () => string;
+  /**
+   * Get chunk upload progress (0-1)
+   **/
+  progress: (relative?: boolean) => number;
+  /**
+   * Mark preprocessing as finished
+   **/
+  preprocessFinished: () => void;
+}
