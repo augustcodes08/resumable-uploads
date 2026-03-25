@@ -1,0 +1,31 @@
+# Dependencies
+node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Production
+/build
+/@mf-types
+/dist
+
+# Misc
+.DS_Store
+*.log
+
+# IDEs and editors
+.idea/
+.vscode/
+*.iml
+*.sublime-workspace
+
+# Git
+.git
+
+# Examples that should not be auto-formatted
+/samples
+
+# Build artifacts
+bower_components

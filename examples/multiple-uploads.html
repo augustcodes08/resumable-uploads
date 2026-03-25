@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Multiple Uploads - Resumable Uploads</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        padding: 40px;
+        background: #f5f5f5;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .description {
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin: 20px 0;
+      }
+
+      .button {
+        background: #4caf50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .button:hover {
+        background: #45a049;
+      }
+
+      .button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .button.secondary {
+        background: #2196f3;
+      }
+
+      .button.secondary:hover {
+        background: #0b7dda;
+      }
+
+      .button.danger {
+        background: #f44336;
+      }
+
+      .button.danger:hover {
+        background: #da190b;
+      }
+
+      .file-list {
+        margin-top: 30px;
+      }
+
+      .file-item {
+        background: #f9f9f9;
+        padding: 20px;
+        margin: 10px 0;
+        border-radius: 4px;
+        border-left: 4px solid #4caf50;
+      }
+
+      .file-item.error {
+        border-left-color: #f44336;
+      }
+
+      .file-item.complete {
+        border-left-color: #4caf50;
+        opacity: 0.7;
+      }
+
+      .file-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .file-name {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .file-size {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .file-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .small-button {
+        background: #2196f3;
+        color: white;
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .small-button:hover {
+        background: #0b7dda;
+      }
+
+      .small-button.danger {
+        background: #f44336;
+      }
+
+      .small-button.danger:hover {
+        background: #da190b;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 20px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #45a049);
+        width: 0%;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 12px;
+      }
+
+      .file-status {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .file-status.success {
+        color: #4caf50;
+      }
+
+      .file-status.error {
+        color: #f44336;
+      }
+
+      .overall-progress {
+        background: #e8f5e9;
+        padding: 20px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+      }
+
+      .overall-progress h3 {
+        margin-bottom: 10px;
+        color: #333;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #999;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #4caf50;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Multiple Uploads Example</h1>
+      <p class="description">
+        Upload multiple files simultaneously with queue management, individual progress tracking,
+        and upload controls.
+      </p>
+
+      <div class="controls">
+        <button id="browseButton" class="button">Add Files</button>
+        <button id="uploadButton" class="button secondary" disabled>Upload All</button>
+        <button id="pauseButton" class="button secondary" disabled>Pause All</button>
+        <button id="cancelButton" class="button danger" disabled>Cancel All</button>
+      </div>
+
+      <div id="overallProgress" class="overall-progress" style="display: none">
+        <h3>Overall Progress</h3>
+        <div class="progress-bar-container">
+          <div id="overallProgressBar" class="progress-bar">0%</div>
+        </div>
+        <div id="uploadStats"></div>
+      </div>
+
+      <div class="file-list">
+        <div id="fileList" class="empty-state">
+          No files selected. Click "Add Files" to choose files to upload.
+        </div>
+      </div>
+
+      <a href="README.md" class="back-link">← Back to Examples</a>
+    </div>
+
+    <script src="../resumable-uploads.js"></script>
+    <script>
+      // Create Resumable instance with multiple simultaneous uploads
+      const resumable = new Resumable({
+        target: "/api/upload",
+        chunkSize: 1 * 1024 * 1024, // 1MB chunks
+        simultaneousUploads: 3, // Upload 3 files at once
+        testChunks: false,
+        throttleProgressCallbacks: 1,
+      });
+
+      // Get DOM elements
+      const browseButton = document.getElementById("browseButton");
+      const uploadButton = document.getElementById("uploadButton");
+      const pauseButton = document.getElementById("pauseButton");
+      const cancelButton = document.getElementById("cancelButton");
+      const fileList = document.getElementById("fileList");
+      const overallProgress = document.getElementById("overallProgress");
+      const overallProgressBar = document.getElementById("overallProgressBar");
+      const uploadStats = document.getElementById("uploadStats");
+
+      // Check browser support
+      if (!resumable.support) {
+        alert("Your browser does not support HTML5 file uploads!");
+        browseButton.disabled = true;
+      } else {
+        resumable.assignBrowse(browseButton);
+      }
+
+      // Helper function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      // Update file list display
+      function updateFileList() {
+        if (resumable.files.length === 0) {
+          fileList.innerHTML =
+            '<div class="empty-state">No files selected. Click "Add Files" to choose files to upload.</div>';
+          uploadButton.disabled = true;
+          cancelButton.disabled = true;
+          overallProgress.style.display = "none";
+          return;
+        }
+
+        fileList.innerHTML = "";
+        resumable.files.forEach((file) => {
+          const fileItem = createFileElement(file);
+          fileList.appendChild(fileItem);
+        });
+
+        uploadButton.disabled = false;
+        cancelButton.disabled = false;
+        overallProgress.style.display = "block";
+      }
+
+      // Create HTML element for a file
+      function createFileElement(file) {
+        const div = document.createElement("div");
+        div.className = "file-item";
+        div.id = "file-" + file.uniqueIdentifier;
+
+        const progress = Math.floor(file.progress() * 100);
+        const isComplete = file.isComplete();
+        const isUploading = file.isUploading();
+
+        div.innerHTML = `
+        <div class="file-header">
+          <div>
+            <div class="file-name">${file.fileName}</div>
+            <div class="file-size">${formatFileSize(file.size)}</div>
+          </div>
+          <div class="file-actions">
+            <button class="small-button retry-btn" data-id="${file.uniqueIdentifier}" ${isComplete ? 'style="display:none"' : ""}>Retry</button>
+            <button class="small-button danger cancel-btn" data-id="${file.uniqueIdentifier}">Remove</button>
+          </div>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" style="width: ${progress}%">${progress}%</div>
+        </div>
+        <div class="file-status">${isComplete ? "Complete" : isUploading ? "Uploading..." : "Pending"}</div>
+      `;
+
+        if (isComplete) {
+          div.classList.add("complete");
+        }
+
+        return div;
+      }
+
+      // Update overall progress
+      function updateOverallProgress() {
+        const progress = Math.floor(resumable.progress() * 100);
+        overallProgressBar.style.width = progress + "%";
+        overallProgressBar.textContent = progress + "%";
+
+        const completed = resumable.files.filter((f) => f.isComplete()).length;
+        const total = resumable.files.length;
+        uploadStats.textContent = `${completed} of ${total} files completed`;
+      }
+
+      // Event: Files added
+      resumable.on("filesAdded", function (array) {
+        updateFileList();
+        updateOverallProgress();
+      });
+
+      // Event: File progress
+      resumable.on("fileProgress", function (file) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          const progress = Math.floor(file.progress() * 100);
+          const progressBar = fileElement.querySelector(".progress-bar");
+          const status = fileElement.querySelector(".file-status");
+
+          progressBar.style.width = progress + "%";
+          progressBar.textContent = progress + "%";
+          status.textContent = "Uploading...";
+        }
+        updateOverallProgress();
+      });
+
+      // Event: File success
+      resumable.on("fileSuccess", function (file, message) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          fileElement.classList.add("complete");
+          const status = fileElement.querySelector(".file-status");
+          status.textContent = "✓ Complete";
+          status.classList.add("success");
+          const retryBtn = fileElement.querySelector(".retry-btn");
+          retryBtn.style.display = "none";
+        }
+        updateOverallProgress();
+      });
+
+      // Event: File error
+      resumable.on("fileError", function (file, message) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          fileElement.classList.add("error");
+          const status = fileElement.querySelector(".file-status");
+          status.textContent = "✗ Error: " + message;
+          status.classList.add("error");
+        }
+      });
+
+      // Event: Upload started
+      resumable.on("uploadStart", function () {
+        pauseButton.disabled = false;
+        uploadButton.disabled = true;
+      });
+
+      // Event: Complete
+      resumable.on("complete", function () {
+        pauseButton.disabled = true;
+        uploadButton.disabled = true;
+      });
+
+      // Upload button
+      uploadButton.addEventListener("click", function () {
+        resumable.upload();
+      });
+
+      // Pause button
+      pauseButton.addEventListener("click", function () {
+        resumable.pause();
+        pauseButton.disabled = true;
+        uploadButton.disabled = false;
+      });
+
+      // Cancel all button
+      cancelButton.addEventListener("click", function () {
+        if (confirm("Are you sure you want to cancel all uploads?")) {
+          resumable.cancel();
+          updateFileList();
+          updateOverallProgress();
+        }
+      });
+
+      // Event delegation for file actions
+      fileList.addEventListener("click", function (e) {
+        if (e.target.classList.contains("cancel-btn")) {
+          const fileId = e.target.getAttribute("data-id");
+          const file = resumable.getFromUniqueIdentifier(fileId);
+          if (file) {
+            file.cancel();
+            updateFileList();
+            updateOverallProgress();
+          }
+        } else if (e.target.classList.contains("retry-btn")) {
+          const fileId = e.target.getAttribute("data-id");
+          const file = resumable.getFromUniqueIdentifier(fileId);
+          if (file) {
+            file.retry();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>

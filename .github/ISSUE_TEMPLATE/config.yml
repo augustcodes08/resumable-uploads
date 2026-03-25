@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/augustcodes08/resumable-uploads/discussions
+    about: Ask questions or discuss ideas with the community
+  - name: Documentation
+    url: https://github.com/augustcodes08/resumable-uploads/blob/main/DOCUMENTATION.md
+    about: Read the full documentation
+  - name: Security Vulnerability
+    url: https://github.com/augustcodes08/resumable-uploads/security/advisories/new
+    about: Report a security vulnerability privately

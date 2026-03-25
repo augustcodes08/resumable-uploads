@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Basic Upload - Resumable Uploads</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        padding: 40px;
+        background: #f5f5f5;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .description {
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .upload-section {
+        margin: 30px 0;
+      }
+
+      .browse-button {
+        background: #4caf50;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .browse-button:hover {
+        background: #45a049;
+      }
+
+      .browse-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .progress-section {
+        margin-top: 20px;
+        display: none;
+      }
+
+      .progress-section.active {
+        display: block;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 30px;
+        background: #f0f0f0;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #45a049);
+        width: 0%;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .file-info {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+        border-left: 4px solid #4caf50;
+      }
+
+      .file-info strong {
+        color: #333;
+      }
+
+      .status {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 4px;
+        display: none;
+      }
+
+      .status.active {
+        display: block;
+      }
+
+      .status.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .status.warning {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeaa7;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #4caf50;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Basic Upload Example</h1>
+      <p class="description">
+        This example demonstrates the most basic usage of resumable-uploads: selecting a file and
+        uploading it with progress tracking.
+      </p>
+
+      <div class="upload-section">
+        <button id="browseButton" class="browse-button">Choose File</button>
+      </div>
+
+      <div id="progressSection" class="progress-section">
+        <div class="file-info" id="fileInfo"></div>
+        <div class="progress-bar-container">
+          <div id="progressBar" class="progress-bar">0%</div>
+        </div>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <a href="README.md" class="back-link">← Back to Examples</a>
+    </div>
+
+    <script src="../resumable-uploads.js"></script>
+    <script>
+      // Create a new Resumable instance
+      const resumable = new Resumable({
+        target: "/api/upload",
+        chunkSize: 1 * 1024 * 1024, // 1MB chunks
+        simultaneousUploads: 1,
+        testChunks: false,
+        throttleProgressCallbacks: 1,
+      });
+
+      // Get DOM elements
+      const browseButton = document.getElementById("browseButton");
+      const progressSection = document.getElementById("progressSection");
+      const progressBar = document.getElementById("progressBar");
+      const fileInfo = document.getElementById("fileInfo");
+      const status = document.getElementById("status");
+
+      // Check if browser supports resumable uploads
+      if (!resumable.support) {
+        showStatus("Your browser does not support HTML5 file uploads!", "error");
+        browseButton.disabled = true;
+      } else {
+        // Assign the browse button
+        resumable.assignBrowse(browseButton);
+      }
+
+      // Function to show status messages
+      function showStatus(message, type) {
+        status.textContent = message;
+        status.className = "status active " + type;
+      }
+
+      // Function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      // Event: File added
+      resumable.on("fileAdded", function (file, event) {
+        console.log("File added:", file.fileName);
+
+        // Show file information
+        fileInfo.innerHTML = `
+        <strong>File:</strong> ${file.fileName}<br>
+        <strong>Size:</strong> ${formatFileSize(file.size)}<br>
+        <strong>Type:</strong> ${file.file.type || "Unknown"}
+      `;
+
+        // Show progress section
+        progressSection.classList.add("active");
+
+        // Reset progress
+        progressBar.style.width = "0%";
+        progressBar.textContent = "0%";
+
+        // Clear any previous status
+        status.classList.remove("active");
+
+        // Start upload automatically
+        resumable.upload();
+      });
+
+      // Event: Progress update
+      resumable.on("progress", function () {
+        const progress = Math.floor(resumable.progress() * 100);
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+        console.log("Progress:", progress + "%");
+      });
+
+      // Event: File successfully uploaded
+      resumable.on("fileSuccess", function (file, message) {
+        console.log("File uploaded successfully:", file.fileName);
+        showStatus("✓ File uploaded successfully!", "success");
+        browseButton.disabled = false;
+      });
+
+      // Event: Upload error
+      resumable.on("fileError", function (file, message) {
+        console.error("Upload error:", message);
+        showStatus("✗ Upload failed: " + message, "error");
+        browseButton.disabled = false;
+      });
+
+      // Event: Upload started
+      resumable.on("uploadStart", function () {
+        console.log("Upload started");
+        browseButton.disabled = true;
+        showStatus("Uploading...", "warning");
+      });
+
+      // Event: All uploads complete
+      resumable.on("complete", function () {
+        console.log("All uploads complete");
+      });
+    </script>
+  </body>
+</html>

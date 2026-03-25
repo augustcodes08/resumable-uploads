@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drag and Drop - Resumable Uploads</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        padding: 40px;
+        background: #f5f5f5;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .description {
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .drop-zone {
+        border: 3px dashed #ccc;
+        border-radius: 8px;
+        padding: 60px 40px;
+        text-align: center;
+        background: #fafafa;
+        transition: all 0.3s;
+        cursor: pointer;
+      }
+
+      .drop-zone:hover {
+        border-color: #4caf50;
+        background: #f1f8f4;
+      }
+
+      .drop-zone.drag-over {
+        border-color: #4caf50;
+        background: #e8f5e9;
+        transform: scale(1.02);
+      }
+
+      .drop-zone-icon {
+        font-size: 64px;
+        margin-bottom: 20px;
+      }
+
+      .drop-zone-text {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 10px;
+      }
+
+      .drop-zone-hint {
+        font-size: 14px;
+        color: #999;
+      }
+
+      .browse-button {
+        display: inline-block;
+        background: #4caf50;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background 0.3s;
+      }
+
+      .browse-button:hover {
+        background: #45a049;
+      }
+
+      .file-list {
+        margin-top: 30px;
+      }
+
+      .file-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .file-list-title {
+        font-size: 20px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .clear-button {
+        background: #f44336;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .clear-button:hover {
+        background: #da190b;
+      }
+
+      .file-item {
+        background: #f9f9f9;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        border-left: 4px solid #4caf50;
+      }
+
+      .file-item.uploading {
+        border-left-color: #2196f3;
+      }
+
+      .file-item.complete {
+        border-left-color: #4caf50;
+        opacity: 0.8;
+      }
+
+      .file-item.error {
+        border-left-color: #f44336;
+      }
+
+      .file-icon {
+        font-size: 32px;
+        flex-shrink: 0;
+      }
+
+      .file-details {
+        flex: 1;
+      }
+
+      .file-name {
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .file-meta {
+        font-size: 12px;
+        color: #666;
+      }
+
+      .file-progress {
+        width: 100%;
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 8px;
+      }
+
+      .file-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #45a049);
+        width: 0%;
+        transition: width 0.3s;
+      }
+
+      .file-status {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .file-status.success {
+        color: #4caf50;
+      }
+
+      .file-status.error {
+        color: #f44336;
+      }
+
+      .file-remove {
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        flex-shrink: 0;
+      }
+
+      .file-remove:hover {
+        background: #da190b;
+      }
+
+      .upload-controls {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+      }
+
+      .control-button {
+        background: #2196f3;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .control-button:hover {
+        background: #0b7dda;
+      }
+
+      .control-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #999;
+      }
+
+      .validation-info {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 4px;
+        padding: 15px;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #856404;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #4caf50;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Drag and Drop Example</h1>
+      <p class="description">
+        Drag and drop files into the drop zone below, or click to browse. Includes file type and
+        size validation.
+      </p>
+
+      <div id="dropZone" class="drop-zone">
+        <div class="drop-zone-icon">📁</div>
+        <div class="drop-zone-text">Drag and drop files here</div>
+        <div class="drop-zone-hint">or</div>
+        <button id="browseButton" class="browse-button">Browse Files</button>
+      </div>
+
+      <div class="validation-info">
+        <strong>File Restrictions:</strong> Maximum 50MB per file. All file types accepted.
+      </div>
+
+      <div class="file-list">
+        <div class="file-list-header">
+          <div class="file-list-title">Upload Queue</div>
+          <button id="clearButton" class="clear-button" style="display: none">Clear All</button>
+        </div>
+        <div id="fileListContainer" class="empty-state">
+          No files added yet. Drag files here or click browse to get started.
+        </div>
+        <div id="uploadControls" class="upload-controls" style="display: none">
+          <button id="uploadButton" class="control-button">Upload All</button>
+          <button id="pauseButton" class="control-button" style="display: none">Pause</button>
+        </div>
+      </div>
+
+      <a href="README.md" class="back-link">← Back to Examples</a>
+    </div>
+
+    <script src="../resumable-uploads.js"></script>
+    <script>
+      // Create Resumable instance with file validation
+      const resumable = new Resumable({
+        target: "/api/upload",
+        chunkSize: 1 * 1024 * 1024,
+        simultaneousUploads: 3,
+        testChunks: false,
+        maxFileSize: 50 * 1024 * 1024, // 50MB max
+        maxFileSizeErrorCallback: function (file) {
+          alert(`File "${file.name}" is too large. Maximum size is 50MB.`);
+        },
+      });
+
+      // Get DOM elements
+      const dropZone = document.getElementById("dropZone");
+      const browseButton = document.getElementById("browseButton");
+      const fileListContainer = document.getElementById("fileListContainer");
+      const uploadControls = document.getElementById("uploadControls");
+      const uploadButton = document.getElementById("uploadButton");
+      const pauseButton = document.getElementById("pauseButton");
+      const clearButton = document.getElementById("clearButton");
+
+      // Check browser support
+      if (!resumable.support) {
+        dropZone.innerHTML =
+          '<div class="drop-zone-text">Your browser does not support HTML5 file uploads!</div>';
+      } else {
+        resumable.assignBrowse(browseButton);
+        resumable.assignDrop(dropZone);
+      }
+
+      // Helper function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      // Get file icon based on type
+      function getFileIcon(file) {
+        const type = file.file.type;
+        if (type.startsWith("image/")) return "🖼️";
+        if (type.startsWith("video/")) return "🎥";
+        if (type.startsWith("audio/")) return "🎵";
+        if (type.includes("pdf")) return "📄";
+        if (type.includes("zip") || type.includes("rar")) return "📦";
+        if (type.includes("text")) return "📝";
+        return "📄";
+      }
+
+      // Update file list display
+      function updateFileList() {
+        if (resumable.files.length === 0) {
+          fileListContainer.innerHTML =
+            '<div class="empty-state">No files added yet. Drag files here or click browse to get started.</div>';
+          uploadControls.style.display = "none";
+          clearButton.style.display = "none";
+          return;
+        }
+
+        fileListContainer.innerHTML = "";
+        resumable.files.forEach((file) => {
+          const fileElement = createFileElement(file);
+          fileListContainer.appendChild(fileElement);
+        });
+
+        uploadControls.style.display = "flex";
+        clearButton.style.display = "block";
+      }
+
+      // Create file element
+      function createFileElement(file) {
+        const div = document.createElement("div");
+        div.className = "file-item";
+        div.id = "file-" + file.uniqueIdentifier;
+
+        const progress = Math.floor(file.progress() * 100);
+        const isComplete = file.isComplete();
+        const isUploading = file.isUploading();
+
+        let statusText = "Pending";
+        let statusClass = "";
+        if (isComplete) {
+          statusText = "✓ Complete";
+          statusClass = "success";
+          div.classList.add("complete");
+        } else if (isUploading) {
+          statusText = "Uploading...";
+          div.classList.add("uploading");
+        }
+
+        div.innerHTML = `
+        <div class="file-icon">${getFileIcon(file)}</div>
+        <div class="file-details">
+          <div class="file-name">${file.fileName}</div>
+          <div class="file-meta">${formatFileSize(file.size)} • ${file.file.type || "Unknown type"}</div>
+          <div class="file-progress">
+            <div class="file-progress-bar" style="width: ${progress}%"></div>
+          </div>
+          <div class="file-status ${statusClass}">${statusText}</div>
+        </div>
+        <button class="file-remove" data-id="${file.uniqueIdentifier}">×</button>
+      `;
+
+        return div;
+      }
+
+      // Drag and drop visual feedback
+      dropZone.addEventListener("dragover", function (e) {
+        e.preventDefault();
+        dropZone.classList.add("drag-over");
+      });
+
+      dropZone.addEventListener("dragleave", function (e) {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+
+      dropZone.addEventListener("drop", function (e) {
+        e.preventDefault();
+        dropZone.classList.remove("drag-over");
+      });
+
+      // Event: Files added
+      resumable.on("filesAdded", function (array) {
+        updateFileList();
+      });
+
+      // Event: File progress
+      resumable.on("fileProgress", function (file) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          const progress = Math.floor(file.progress() * 100);
+          const progressBar = fileElement.querySelector(".file-progress-bar");
+          const status = fileElement.querySelector(".file-status");
+
+          progressBar.style.width = progress + "%";
+          status.textContent = `Uploading... ${progress}%`;
+          fileElement.classList.add("uploading");
+          fileElement.classList.remove("complete");
+        }
+      });
+
+      // Event: File success
+      resumable.on("fileSuccess", function (file, message) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          const status = fileElement.querySelector(".file-status");
+          status.textContent = "✓ Complete";
+          status.classList.add("success");
+          fileElement.classList.add("complete");
+          fileElement.classList.remove("uploading");
+        }
+      });
+
+      // Event: File error
+      resumable.on("fileError", function (file, message) {
+        const fileElement = document.getElementById("file-" + file.uniqueIdentifier);
+        if (fileElement) {
+          const status = fileElement.querySelector(".file-status");
+          status.textContent = "✗ Error: " + message;
+          status.classList.add("error");
+          fileElement.classList.add("error");
+          fileElement.classList.remove("uploading");
+        }
+      });
+
+      // Event: Upload started
+      resumable.on("uploadStart", function () {
+        uploadButton.style.display = "none";
+        pauseButton.style.display = "block";
+      });
+
+      // Event: Complete
+      resumable.on("complete", function () {
+        uploadButton.style.display = "block";
+        pauseButton.style.display = "none";
+      });
+
+      // Upload button
+      uploadButton.addEventListener("click", function () {
+        resumable.upload();
+      });
+
+      // Pause button
+      pauseButton.addEventListener("click", function () {
+        resumable.pause();
+        uploadButton.style.display = "block";
+        pauseButton.style.display = "none";
+      });
+
+      // Clear all button
+      clearButton.addEventListener("click", function () {
+        if (confirm("Remove all files from the queue?")) {
+          resumable.cancel();
+          updateFileList();
+        }
+      });
+
+      // Remove individual file
+      fileListContainer.addEventListener("click", function (e) {
+        if (e.target.classList.contains("file-remove")) {
+          const fileId = e.target.getAttribute("data-id");
+          const file = resumable.getFromUniqueIdentifier(fileId);
+          if (file) {
+            file.cancel();
+            updateFileList();
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
