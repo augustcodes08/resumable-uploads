@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Retry Logic - Resumable Uploads</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        padding: 40px;
+        background: #f5f5f5;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .description {
+        color: #666;
+        margin-bottom: 30px;
+      }
+
+      .info-box {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 30px;
+        border-radius: 4px;
+      }
+
+      .info-box strong {
+        color: #1976d2;
+      }
+
+      .settings {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 4px;
+        margin-bottom: 30px;
+      }
+
+      .settings h3 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .setting-item {
+        margin: 10px 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .setting-label {
+        color: #666;
+      }
+
+      .setting-value {
+        font-weight: bold;
+        color: #333;
+      }
+
+      .upload-section {
+        margin: 30px 0;
+      }
+
+      .browse-button {
+        background: #4caf50;
+        color: white;
+        padding: 12px 30px;
+        border: none;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+
+      .browse-button:hover {
+        background: #45a049;
+      }
+
+      .file-info {
+        background: #f9f9f9;
+        padding: 20px;
+        border-radius: 4px;
+        margin: 20px 0;
+        border-left: 4px solid #4caf50;
+      }
+
+      .file-name {
+        font-weight: bold;
+        color: #333;
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+
+      .file-meta {
+        color: #666;
+        font-size: 14px;
+      }
+
+      .progress-section {
+        margin: 20px 0;
+      }
+
+      .progress-bar-container {
+        width: 100%;
+        height: 30px;
+        background: #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #4caf50, #45a049);
+        width: 0%;
+        transition: width 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+      }
+
+      .event-log {
+        margin-top: 30px;
+      }
+
+      .event-log h3 {
+        color: #333;
+        margin-bottom: 15px;
+      }
+
+      .log-container {
+        background: #1e1e1e;
+        color: #d4d4d4;
+        padding: 20px;
+        border-radius: 4px;
+        max-height: 400px;
+        overflow-y: auto;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+
+      .log-entry {
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 3px;
+      }
+
+      .log-entry.info {
+        color: #4fc3f7;
+      }
+
+      .log-entry.success {
+        color: #81c784;
+      }
+
+      .log-entry.error {
+        color: #e57373;
+      }
+
+      .log-entry.warning {
+        color: #ffb74d;
+      }
+
+      .log-entry .timestamp {
+        color: #888;
+        font-size: 11px;
+      }
+
+      .status-message {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 4px;
+        display: none;
+      }
+
+      .status-message.active {
+        display: block;
+      }
+
+      .status-message.success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+      }
+
+      .status-message.error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin: 20px 0;
+      }
+
+      .stat-card {
+        background: #f9f9f9;
+        padding: 15px;
+        border-radius: 4px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 32px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 5px;
+      }
+
+      .stat-label {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 30px;
+        color: #4caf50;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Retry Logic Example</h1>
+      <p class="description">
+        This example demonstrates automatic retry functionality for failed chunk uploads with
+        configurable retry limits and intervals.
+      </p>
+
+      <div class="info-box">
+        <strong>Note:</strong> This example uses retry logic to handle network failures. If uploads
+        fail, chunks will be automatically retried according to the configuration below. Since
+        there's no real server, you'll see retry attempts in the event log.
+      </div>
+
+      <div class="settings">
+        <h3>Retry Configuration</h3>
+        <div class="setting-item">
+          <span class="setting-label">Maximum Retries per Chunk:</span>
+          <span class="setting-value" id="maxRetries">5</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Retry Interval:</span>
+          <span class="setting-value" id="retryInterval">1000ms (increases exponentially)</span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Chunk Size:</span>
+          <span class="setting-value">1 MB</span>
+        </div>
+      </div>
+
+      <div class="upload-section">
+        <button id="browseButton" class="browse-button">Select File to Upload</button>
+      </div>
+
+      <div id="fileInfo" class="file-info" style="display: none">
+        <div class="file-name" id="fileName"></div>
+        <div class="file-meta" id="fileMeta"></div>
+
+        <div class="progress-section">
+          <div class="progress-bar-container">
+            <div id="progressBar" class="progress-bar">0%</div>
+          </div>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="uploadedChunks">0</div>
+            <div class="stat-label">Chunks Uploaded</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="retryCount">0</div>
+            <div class="stat-label">Total Retries</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="failedChunks">0</div>
+            <div class="stat-label">Failed Chunks</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="statusMessage" class="status-message"></div>
+
+      <div class="event-log">
+        <h3>Event Log</h3>
+        <div id="logContainer" class="log-container">
+          <div class="log-entry info">Waiting for file selection...</div>
+        </div>
+      </div>
+
+      <a href="README.md" class="back-link">← Back to Examples</a>
+    </div>
+
+    <script src="../resumable-uploads.js"></script>
+    <script>
+      // Stats tracking
+      let stats = {
+        uploadedChunks: 0,
+        retries: 0,
+        failed: 0,
+      };
+
+      // Create Resumable instance with retry configuration
+      const resumable = new Resumable({
+        target: "/api/upload",
+        chunkSize: 1 * 1024 * 1024, // 1MB chunks
+        simultaneousUploads: 1,
+        testChunks: false,
+        maxChunkRetries: 5,
+        chunkRetryInterval: function (chunkNumber, file) {
+          // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+          const baseInterval = 1000;
+          const attempt = this.currentRetry || 0;
+          return baseInterval * Math.pow(2, attempt);
+        },
+      });
+
+      // Get DOM elements
+      const browseButton = document.getElementById("browseButton");
+      const fileInfo = document.getElementById("fileInfo");
+      const fileName = document.getElementById("fileName");
+      const fileMeta = document.getElementById("fileMeta");
+      const progressBar = document.getElementById("progressBar");
+      const statusMessage = document.getElementById("statusMessage");
+      const logContainer = document.getElementById("logContainer");
+      const uploadedChunksEl = document.getElementById("uploadedChunks");
+      const retryCountEl = document.getElementById("retryCount");
+      const failedChunksEl = document.getElementById("failedChunks");
+
+      // Check browser support
+      if (!resumable.support) {
+        logEvent("Browser does not support HTML5 file uploads", "error");
+        browseButton.disabled = true;
+      } else {
+        resumable.assignBrowse(browseButton);
+      }
+
+      // Helper function to format file size
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+      }
+
+      // Log events
+      function logEvent(message, type = "info") {
+        const timestamp = new Date().toLocaleTimeString();
+        const entry = document.createElement("div");
+        entry.className = `log-entry ${type}`;
+        entry.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+        logContainer.appendChild(entry);
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
+
+      // Show status message
+      function showStatus(message, type) {
+        statusMessage.textContent = message;
+        statusMessage.className = `status-message active ${type}`;
+      }
+
+      // Update stats display
+      function updateStats() {
+        uploadedChunksEl.textContent = stats.uploadedChunks;
+        retryCountEl.textContent = stats.retries;
+        failedChunksEl.textContent = stats.failed;
+      }
+
+      // Event: File added
+      resumable.on("fileAdded", function (file, event) {
+        logEvent(`File added: ${file.fileName} (${formatFileSize(file.size)})`, "info");
+
+        fileName.textContent = file.fileName;
+        fileMeta.textContent = `Size: ${formatFileSize(file.size)} • Type: ${file.file.type || "Unknown"} • Chunks: ${file.chunks.length}`;
+
+        fileInfo.style.display = "block";
+        progressBar.style.width = "0%";
+        progressBar.textContent = "0%";
+
+        // Reset stats
+        stats = { uploadedChunks: 0, retries: 0, failed: 0 };
+        updateStats();
+
+        statusMessage.classList.remove("active");
+
+        logEvent("Starting upload...", "info");
+        resumable.upload();
+      });
+
+      // Event: Progress
+      resumable.on("progress", function () {
+        const progress = Math.floor(resumable.progress() * 100);
+        progressBar.style.width = progress + "%";
+        progressBar.textContent = progress + "%";
+      });
+
+      // Event: File retry
+      resumable.on("fileRetry", function (file, chunk) {
+        stats.retries++;
+        updateStats();
+        const retryNum = chunk.retries || 1;
+        logEvent(
+          `Retrying chunk ${chunk.offset / resumable.opts.chunkSize + 1} (attempt ${retryNum}/${resumable.opts.maxChunkRetries})`,
+          "warning"
+        );
+      });
+
+      // Event: File success
+      resumable.on("fileSuccess", function (file, message) {
+        stats.uploadedChunks = file.chunks.length;
+        updateStats();
+        logEvent(`✓ Upload completed successfully!`, "success");
+        showStatus("File uploaded successfully!", "success");
+      });
+
+      // Event: File error
+      resumable.on("fileError", function (file, message) {
+        stats.failed++;
+        updateStats();
+        logEvent(`✗ Upload failed: ${message}`, "error");
+        showStatus(`Upload failed: ${message}`, "error");
+      });
+
+      // Event: Upload start
+      resumable.on("uploadStart", function () {
+        logEvent("Upload started", "info");
+        browseButton.disabled = true;
+      });
+
+      // Event: Complete
+      resumable.on("complete", function () {
+        logEvent("All uploads complete", "success");
+        browseButton.disabled = false;
+      });
+
+      // Event: Chunk progress (to track successful chunks)
+      resumable.on("fileProgress", function (file) {
+        const completedChunks = file.chunks.filter((chunk) => chunk.status() === "success").length;
+        if (completedChunks > stats.uploadedChunks) {
+          stats.uploadedChunks = completedChunks;
+          updateStats();
+          logEvent(`Chunk ${completedChunks}/${file.chunks.length} uploaded`, "success");
+        }
+      });
+
+      // Initial log
+      logEvent("Resumable uploads initialized with retry logic", "info");
+      logEvent(
+        `Configuration: Max ${resumable.opts.maxChunkRetries} retries, exponential backoff starting at 1000ms`,
+        "info"
+      );
+    </script>
+  </body>
+</html>
