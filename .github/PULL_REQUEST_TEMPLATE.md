@@ -4,6 +4,7 @@ Please include a summary of the changes and the related issue. Please also inclu
 Fixes # (issue)
 
 ## Type of change
+
 Please select which of the following options that are relevant:
 
 - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -11,7 +12,8 @@ Please select which of the following options that are relevant:
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
 - [ ] This change requires a documentation update
 
-# Testing 
+# Testing
+
 - [ ] All tests have passed
 - [ ] Have tests been added for new functionality?
 

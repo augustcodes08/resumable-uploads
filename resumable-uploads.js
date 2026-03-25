@@ -68,44 +68,44 @@
       clearInput: true,
       chunkFormat: "blob",
       setChunkTypeFromFile: false,
-      maxFilesErrorCallback: function (files, errorCount) {
+      maxFilesErrorCallback: function (_files, _errorCount) {
         const maxFiles = $.getOpt("maxFiles");
         alert(
           "Please upload no more than " +
             maxFiles +
             " file" +
             (maxFiles === 1 ? "" : "s") +
-            " at a time.",
+            " at a time."
         );
       },
       minFileSize: 1,
-      minFileSizeErrorCallback: function (file, errorCount) {
+      minFileSizeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
               " is too small, please upload files larger than " +
               $h.formatSize($.getOpt("minFileSize")) +
-              ".",
+              "."
         );
       },
       maxFileSize: undefined,
-      maxFileSizeErrorCallback: function (file, errorCount) {
+      maxFileSizeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
               " is too large, please upload files less than " +
               $h.formatSize($.getOpt("maxFileSize")) +
-              ".",
+              "."
         );
       },
       fileType: [],
-      fileTypeErrorCallback: function (file, errorCount) {
+      fileTypeErrorCallback: function (file, _errorCount) {
         alert(
           file.fileName ||
             file.name +
               " has type not allowed, please upload files of type " +
               $.getOpt("fileType") +
-              ".",
+              "."
         );
       },
     };
@@ -204,10 +204,7 @@
           return custom(file, event);
         }
         let relativePath =
-          file.webkitRelativePath ||
-          file.relativePath ||
-          file.fileName ||
-          file.name; // Some confusion in different versions of Firefox
+          file.webkitRelativePath || file.relativePath || file.fileName || file.name; // Some confusion in different versions of Firefox
         let size = file.size;
         return size + "-" + relativePath.replace(/[^0-9a-zA-Z_-]/gim, "");
       },
@@ -239,10 +236,7 @@
         let target = $.getOpt("target");
 
         if (request === "test" && $.getOpt("testTarget")) {
-          target =
-            $.getOpt("testTarget") === "/"
-              ? $.getOpt("target")
-              : $.getOpt("testTarget");
+          target = $.getOpt("testTarget") === "/" ? $.getOpt("target") : $.getOpt("testTarget");
         }
 
         if (typeof target === "function") {
@@ -373,7 +367,7 @@
               // bind all properties except for callback
               return processItem.bind(null, entry, path, items);
             }),
-            cb,
+            cb
           );
         });
       }
@@ -406,7 +400,7 @@
             // at least one file found
             appendFilesFromFileList(files, event);
           }
-        },
+        }
       );
     }
 
@@ -423,10 +417,7 @@
         "fileType",
         "fileTypeErrorCallback",
       ]);
-      if (
-        typeof o.maxFiles !== "undefined" &&
-        o.maxFiles < fileList.length + $.files.length
-      ) {
+      if (typeof o.maxFiles !== "undefined" && o.maxFiles < fileList.length + $.files.length) {
         // if single-file upload, file is already added, and trying to add 1 new file, simply replace the already-added file
         if (o.maxFiles === 1 && $.files.length === 1 && fileList.length === 1) {
           $.removeFile($.files[0]);
@@ -457,18 +448,13 @@
           let fileTypeFound = false;
           for (let index in o.fileType) {
             // For good behaviour we do some inital sanitizing. Remove spaces and lowercase all
-            o.fileType[index] = o.fileType[index]
-              .replace(/\s/g, "")
-              .toLowerCase();
+            o.fileType[index] = o.fileType[index].replace(/\s/g, "").toLowerCase();
 
             // Allowing for both [extension, .extension, mime/type, mime/*]
-            let extension =
-              (o.fileType[index].match(/^[^.][^/]+$/) ? "." : "") +
-              o.fileType[index];
+            let extension = (o.fileType[index].match(/^[^.][^/]+$/) ? "." : "") + o.fileType[index];
 
             if (
-              fileName.substr(-1 * extension.length).toLowerCase() ===
-                extension ||
+              fileName.substr(-1 * extension.length).toLowerCase() === extension ||
               //If MIME type, check for wildcard or if extension matches the files tiletype
               (extension.indexOf("/") !== -1 &&
                 ((extension.indexOf("*") !== -1 &&
@@ -502,8 +488,7 @@
               let f = new ResumableFile($, file, uniqueIdentifier);
               $.files.push(f);
               files.push(f);
-              f.container =
-                typeof event != "undefined" ? event.srcElement : null;
+              f.container = typeof event != "undefined" ? event.srcElement : null;
               window.setTimeout(function () {
                 $.fire("fileAdded", f, event);
               }, 0);
@@ -526,7 +511,7 @@
               // unique identifier generation failed
               // skip further processing, only decrease file count
               decreaseRemaining();
-            },
+            }
           );
         } else {
           // non-Promise provided as unique identifier, process synchronously
@@ -545,8 +530,7 @@
       $.file = file;
       $.fileName = file.fileName || file.name; // Some confusion in different versions of Firefox
       $.size = file.size;
-      $.relativePath =
-        file.relativePath || file.webkitRelativePath || $.fileName;
+      $.relativePath = file.relativePath || file.webkitRelativePath || $.fileName;
       $.uniqueIdentifier = uniqueIdentifier;
       $._pause = false;
       $.container = "";
@@ -625,9 +609,7 @@
         let maxOffset = Math.max(round($.file.size / $.getOpt("chunkSize")), 1);
         for (let offset = 0; offset < maxOffset; offset++) {
           (function (offset) {
-            $.chunks.push(
-              new ResumableChunk($.resumableObj, $, offset, chunkEvent),
-            );
+            $.chunks.push(new ResumableChunk($.resumableObj, $, offset, chunkEvent));
             $.resumableObj.fire("chunkingProgress", $, offset / maxOffset);
           })(offset);
         }
@@ -666,11 +648,7 @@
         }
         $h.each($.chunks, function (chunk) {
           let status = chunk.status();
-          if (
-            status == "pending" ||
-            status == "uploading" ||
-            chunk.preprocessState === 1
-          ) {
+          if (status == "pending" || status == "uploading" || chunk.preprocessState === 1) {
             outstanding = true;
             return false;
           }
@@ -754,10 +732,7 @@
       $.loaded = 0;
       $.startByte = $.offset * chunkSize;
       $.endByte = Math.min($.fileObjSize, ($.offset + 1) * chunkSize);
-      if (
-        $.fileObjSize - $.endByte < chunkSize &&
-        !$.getOpt("forceChunkSize")
-      ) {
+      if ($.fileObjSize - $.endByte < chunkSize && !$.getOpt("forceChunkSize")) {
         // The last chunk will be bigger than the chunk size, but less than 2*chunkSize
         $.endByte = $.fileObjSize;
       }
@@ -768,7 +743,7 @@
         // Set up request and listen for event
         $.xhrTest = new XMLHttpRequest();
 
-        let testHandler = function (e) {
+        let testHandler = function (_e) {
           $.tested = true;
           let status = $.status();
           if (status == "success") {
@@ -786,14 +761,10 @@
         let params = [];
         let parameterNamespace = $.getOpt("parameterNamespace");
         let customQuery = $.getOpt("query");
-        if (typeof customQuery == "function")
-          customQuery = customQuery($.fileObj, $);
+        if (typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function (k, v) {
           params.push(
-            [
-              encodeURIComponent(parameterNamespace + k),
-              encodeURIComponent(v),
-            ].join("="),
+            [encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join("=")
           );
         });
         // Add extra data to identify chunk
@@ -817,11 +788,10 @@
             })
             .map(function (pair) {
               // map each key/value pair to its final form
-              return [
-                parameterNamespace + $.getOpt(pair[0]),
-                encodeURIComponent(pair[1]),
-              ].join("=");
-            }),
+              return [parameterNamespace + $.getOpt(pair[0]), encodeURIComponent(pair[1])].join(
+                "="
+              );
+            })
         );
         // Append the relevant chunk and send it
         $.xhrTest.open($.getOpt("testMethod"), $h.getTarget("test", params));
@@ -879,14 +849,14 @@
             }
             $.loaded = e.loaded || 0;
           },
-          false,
+          false
         );
         $.loaded = 0;
         $.pendingRetry = false;
         $.callback("progress");
 
         // Done (either done, failed or retry)
-        let doneHandler = function (e) {
+        let doneHandler = function (_e) {
           const statusCode = $.xhr?.status;
           let status = $.status();
           if (status == "success" || status == "error") {
@@ -941,8 +911,7 @@
           }, {});
         // Mix in custom data
         let customQuery = $.getOpt("query");
-        if (typeof customQuery == "function")
-          customQuery = customQuery($.fileObj, $);
+        if (typeof customQuery == "function") customQuery = customQuery($.fileObj, $);
         $h.each(customQuery, function (k, v) {
           query[k] = v;
         });
@@ -957,7 +926,7 @@
         let bytes = $.fileObj.file[func](
           $.startByte,
           $.endByte,
-          $.getOpt("setChunkTypeFromFile") ? $.fileObj.file.type : "",
+          $.getOpt("setChunkTypeFromFile") ? $.fileObj.file.type : ""
         );
         let data = null;
         let params = [];
@@ -968,10 +937,7 @@
           data = bytes;
           $h.each(query, function (k, v) {
             params.push(
-              [
-                encodeURIComponent(parameterNamespace + k),
-                encodeURIComponent(v),
-              ].join("="),
+              [encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join("=")
             );
           });
         } else {
@@ -980,25 +946,19 @@
           $h.each(query, function (k, v) {
             data.append(parameterNamespace + k, v);
             params.push(
-              [
-                encodeURIComponent(parameterNamespace + k),
-                encodeURIComponent(v),
-              ].join("="),
+              [encodeURIComponent(parameterNamespace + k), encodeURIComponent(v)].join("=")
             );
           });
           if ($.getOpt("chunkFormat") == "blob") {
             data.append(
               parameterNamespace + $.getOpt("fileParameterName"),
               bytes,
-              $.fileObj.fileName,
+              $.fileObj.fileName
             );
           } else if ($.getOpt("chunkFormat") == "base64") {
             let fr = new FileReader();
-            fr.onload = function (e) {
-              data.append(
-                parameterNamespace + $.getOpt("fileParameterName"),
-                fr.result,
-              );
+            fr.onload = function (_e) {
+              data.append(parameterNamespace + $.getOpt("fileParameterName"), fr.result);
               $.xhr.send(data);
             };
             fr.readAsDataURL(bytes);
@@ -1159,7 +1119,7 @@
               input.click();
               input.style.display = "none";
             },
-            false,
+            false
           );
           domNode.appendChild(input);
         }
@@ -1186,7 +1146,7 @@
                 }
                 return e;
               })
-              .join(","),
+              .join(",")
           );
         } else {
           input.removeAttribute("accept");
@@ -1201,7 +1161,7 @@
               e.target.value = "";
             }
           },
-          false,
+          false
         );
       });
     };
