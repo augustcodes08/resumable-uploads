@@ -165,7 +165,7 @@ describe("Resumable", () => {
     });
 
     test("should handle query as function", () => {
-      const queryFn = jest.fn((file, chunk) => ({ custom: "param" }));
+      const queryFn = jest.fn(() => ({ custom: "param" }));
       const resumable = new Resumable({
         query: queryFn,
       });
@@ -173,7 +173,7 @@ describe("Resumable", () => {
     });
 
     test("should handle headers as function", () => {
-      const headersFn = jest.fn((file) => ({ "X-Custom": "header" }));
+      const headersFn = jest.fn(() => ({ "X-Custom": "header" }));
       const resumable = new Resumable({
         headers: headersFn,
       });
